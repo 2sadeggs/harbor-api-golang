@@ -14,12 +14,12 @@ const (
 )
 
 // Fetch all projects
-func fetchAllProjects(apiEndpoint, auth string) ([]Project, error) {
+func fetchAllProjects(baseURL, auth string) ([]Project, error) {
 	var projects []Project
 	page := 1
 
 	for {
-		url := fmt.Sprintf("%s/projects?page=%d&page_size=%d", apiEndpoint, page, MaxPageSize)
+		url := fmt.Sprintf("%s/projects?page=%d&page_size=%d", baseURL, page, MaxPageSize)
 		body, err := getRequest(url, auth)
 		if err != nil {
 			return nil, err
@@ -44,9 +44,9 @@ func fetchAllProjects(apiEndpoint, auth string) ([]Project, error) {
 }
 
 // Fetch all repositories for all projects
-func fetchAllRepositories(apiEndpoint, auth string) ([]Repository, error) {
+func fetchAllRepositories(baseURL, auth string) ([]Repository, error) {
 	var allRepositories []Repository
-	projects, err := fetchAllProjects(apiEndpoint, auth)
+	projects, err := fetchAllProjects(baseURL, auth)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func fetchAllRepositories(apiEndpoint, auth string) ([]Repository, error) {
 		page := 1
 
 		for {
-			url := fmt.Sprintf("%s/projects/%s/repositories?page=%d&page_size=%d", apiEndpoint, project.Name, page, MaxPageSize)
+			url := fmt.Sprintf("%s/projects/%s/repositories?page=%d&page_size=%d", baseURL, project.Name, page, MaxPageSize)
 			body, err := getRequest(url, auth)
 			if err != nil {
 				return nil, err
@@ -83,9 +83,9 @@ func fetchAllRepositories(apiEndpoint, auth string) ([]Repository, error) {
 }
 
 // Fetch all artifacts for all repositories
-func fetchAllArtifacts(apiEndpoint, auth string) ([]Artifact, error) {
+func fetchAllArtifacts(baseURL, auth string) ([]Artifact, error) {
 	var allArtifacts []Artifact
-	repositories, err := fetchAllRepositories(apiEndpoint, auth)
+	repositories, err := fetchAllRepositories(baseURL, auth)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func fetchAllArtifacts(apiEndpoint, auth string) ([]Artifact, error) {
 
 		for {
 			url := fmt.Sprintf("%s/projects/%s/repositories/%s/artifacts?page=%d&page_size=%d",
-				apiEndpoint, repoNameParts[0], doubleEncodedRepoName, page, MaxPageSize)
+				baseURL, repoNameParts[0], doubleEncodedRepoName, page, MaxPageSize)
 			body, err := getRequest(url, auth)
 			if err != nil {
 				return nil, err
@@ -127,6 +127,29 @@ func fetchAllArtifacts(apiEndpoint, auth string) ([]Artifact, error) {
 	}
 
 	return allArtifacts, nil
+}
+
+// Fetch all single-architecture and multi-architecture artifact digests
+func fetchAllArtifactsWithTypes(apiEndpoint, auth string) (map[string][]string, error) {
+	artifacts, err := fetchAllArtifacts(apiEndpoint, auth)
+	if err != nil {
+		return nil, err
+	}
+
+	artifactDigests := map[string][]string{
+		"single_architecture": {},
+		"multi_architecture":  {},
+	}
+
+	for _, artifact := range artifacts {
+		if len(artifact.References) == 0 {
+			artifactDigests["single_architecture"] = append(artifactDigests["single_architecture"], artifact.Digest)
+		} else {
+			artifactDigests["multi_architecture"] = append(artifactDigests["multi_architecture"], artifact.Digest)
+		}
+	}
+
+	return artifactDigests, nil
 }
 
 // Print projects in a formatted way
@@ -181,10 +204,24 @@ func main() {
 		return
 	}
 
-	apiEndpoint := fmt.Sprintf("%s://%s/api/v2.0", scheme, harborHost)
+	baseURL := fmt.Sprintf("%s://%s/api/v2.0", scheme, harborHost)
+	artifactDigests, err := fetchAllArtifactsWithTypes(baseURL, auth)
+	if err != nil {
+		fmt.Printf("Error fetching artifact digests: %v\n", err)
+		return
+	}
 
+	fmt.Println("Single-architecture artifact digests:")
+	for _, digest := range artifactDigests["single_architecture"] {
+		fmt.Printf("Digest: %s\n", digest)
+	}
+
+	fmt.Println("Multi-architecture artifact digests:")
+	for _, digest := range artifactDigests["multi_architecture"] {
+		fmt.Printf("Digest: %s\n", digest)
+	}
 	/*	// Fetch all projects
-		projects, err := fetchAllProjects(apiEndpoint, auth)
+		projects, err := fetchAllProjects(baseURL, auth)
 		if err != nil {
 			fmt.Printf("Error fetching projects: %v\n", err)
 			return
@@ -192,18 +229,18 @@ func main() {
 		printProjects(projects)*/
 
 	/*	// Fetch all repositories
-		repositories, err := fetchAllRepositories(apiEndpoint, auth)
+		repositories, err := fetchAllRepositories(baseURL, auth)
 		if err != nil {
 			fmt.Printf("Error fetching repositories: %v\n", err)
 			return
 		}
 		printRepositories(repositories)*/
 
-	// Fetch all artifacts
-	artifacts, err := fetchAllArtifacts(apiEndpoint, auth)
-	if err != nil {
-		fmt.Printf("Error fetching artifacts: %v\n", err)
-		return
-	}
-	printArtifacts(artifacts)
+	/*	// Fetch all artifacts
+		artifacts, err := fetchAllArtifacts(baseURL, auth)
+		if err != nil {
+			fmt.Printf("Error fetching artifacts: %v\n", err)
+			return
+		}
+		printArtifacts(artifacts)*/
 }
