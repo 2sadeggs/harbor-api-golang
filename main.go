@@ -22,35 +22,47 @@ func main() {
 
 	//baseURL := fmt.Sprintf("%s://%s/api/v2.0", scheme, harborHost)
 
-	NonUnknownUris, singles, multies, multiesWithchilds, multiesWithchildsAndUnknownArchs, err := fetchAllArtifactURIsV2(scheme, harborHost, auth)
+	URIs, err := fetchAllArtifactURIsV3(harborHost, auth)
 	if err != nil {
 		fmt.Printf("Error fetching artifact URIs: %v\n", err)
 		return
 	}
 
-	fmt.Println("NonUnknown URIs:")
-	for _, NonUnknownUri := range NonUnknownUris {
-		fmt.Println(NonUnknownUri)
+	fmt.Println("Artifact URIs:")
+	for _, uri := range artifactURIs {
+		fmt.Println(uri)
 	}
 
-	fmt.Println("Single URIs:")
-	for _, single := range singles {
-		fmt.Println(single)
-	}
+	/*
+		NonUnknownUris, singles, multies, multiesWithchilds, multiesWithchildsAndUnknownArchs, err := fetchAllArtifactURIsV2(scheme, harborHost, auth)
+		if err != nil {
+			fmt.Printf("Error fetching artifact URIs: %v\n", err)
+			return
+		}
 
-	fmt.Println("Muities URIs:")
-	for _, multi := range multies {
-		fmt.Println(multi)
-	}
-	fmt.Println("MultiesWithchilds URIs:")
-	for _, multiesWithchild := range multiesWithchilds {
-		fmt.Println(multiesWithchild)
-	}
-	fmt.Println("MultiesWithchildsAndUnknownArch URIs:")
-	for _, multiesWithchildsAndUnknownArch := range multiesWithchildsAndUnknownArchs {
-		fmt.Println(multiesWithchildsAndUnknownArch)
-	}
+		fmt.Println("NonUnknown URIs:")
+		for _, NonUnknownUri := range NonUnknownUris {
+			fmt.Println(NonUnknownUri)
+		}
 
+		fmt.Println("Single URIs:")
+		for _, single := range singles {
+			fmt.Println(single)
+		}
+
+		fmt.Println("Muities URIs:")
+		for _, multi := range multies {
+			fmt.Println(multi)
+		}
+		fmt.Println("MultiesWithchilds URIs:")
+		for _, multiesWithchild := range multiesWithchilds {
+			fmt.Println(multiesWithchild)
+		}
+		fmt.Println("MultiesWithchildsAndUnknownArch URIs:")
+		for _, multiesWithchildsAndUnknownArch := range multiesWithchildsAndUnknownArchs {
+			fmt.Println(multiesWithchildsAndUnknownArch)
+		}
+	*/
 	/*
 		artifactURIs, err := fetchAllArtifactURIs(baseURL, auth)
 		if err != nil {
