@@ -52,22 +52,22 @@ func main() {
 			fmt.Printf("  - %s\n", childDigest)
 		}
 	}*/
-	/*
-		artifactDigests, err := fetchAllArtifactsWithTypes(baseURL, auth)
-		if err != nil {
-			fmt.Printf("Error fetching artifact digests: %v\n", err)
-			return
-		}
 
-		fmt.Println("Single-architecture artifact digests:")
-		for _, digest := range artifactDigests["single_architecture"] {
-			fmt.Printf("Digest: %s\n", digest)
-		}
+	/*artifactDigests, err := fetchAllArtifactsWithTypes(baseURL, auth)
+	if err != nil {
+		fmt.Printf("Error fetching artifact digests: %v\n", err)
+		return
+	}
 
-		fmt.Println("Multi-architecture artifact digests:")
-		for _, digest := range artifactDigests["multi_architecture"] {
-			fmt.Printf("Digest: %s\n", digest)
-		}*/
+	fmt.Println("Single-architecture artifact digests:")
+	for _, digest := range artifactDigests["single_architecture"] {
+		fmt.Printf("Digest: %s\n", digest)
+	}
+
+	fmt.Println("Multi-architecture artifact digests:")
+	for _, digest := range artifactDigests["multi_architecture"] {
+		fmt.Printf("Digest: %s\n", digest)
+	}*/
 
 	/*	// Fetch all projects
 		projects, err := fetchAllProjects(baseURL, auth)

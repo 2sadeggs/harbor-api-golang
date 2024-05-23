@@ -39,15 +39,20 @@ func fetchAllArtifactURIs(baseURL, auth string) ([]string, error) {
 			// Single-architecture artifact
 			uri = fmt.Sprintf("%s/%s/%s@%s",
 				baseURL, projectName, repoName, artifact.Digest)
+			uris = append(uris, uri)
 		} else {
 			// Multi-architecture artifact
 			for _, reference := range artifact.References {
+				if reference.Platform.Architecture == "unknown" || reference.Platform.Os == "unknown" {
+					// 如果当前制品引用 reference 的平台架构或平台OS为 unknown 则跳出该 reference 循环 进入下一个 reference
+					continue
+				}
 				uri = fmt.Sprintf("%s/%s/%s@%s::%s",
 					baseURL, projectName, repoName, artifact.Digest, reference.ChildDigest)
+				uris = append(uris, uri)
 			}
 		}
 
-		uris = append(uris, uri)
 	}
 
 	return uris, nil
