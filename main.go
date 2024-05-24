@@ -12,17 +12,14 @@ const (
 
 func main() {
 	// 从环境变量中获取 harbor host 和认证信息
-	scheme := os.Getenv("HARBOR_SCHEME")
-	harborHost := os.Getenv("HARBOR_HOST")
+	baseURL := os.Getenv("HARBOR_BASEURL")
 	auth := os.Getenv("HARBOR_AUTH")
-	if scheme == "" || harborHost == "" || auth == "" {
-		fmt.Println("Error: HARBOR_SCHEME, HARBOR_HOST or HARBOR_AUTH environment variables are not set.")
+	if baseURL == "" || auth == "" {
+		fmt.Println("Error: HARBOR_BASEURL or HARBOR_AUTH environment variables are not set.")
 		return
 	}
 
-	//baseURL := fmt.Sprintf("%s://%s/api/v2.0", scheme, harborHost)
-
-	URIs, err := fetchAllArtifactURIsV3(scheme, harborHost, auth)
+	URIs, err := fetchAllArtifactURIsNonUnknownArch(baseURL, auth)
 	if err != nil {
 		fmt.Printf("Error fetching artifact URIs: %v\n", err)
 		return
@@ -32,6 +29,17 @@ func main() {
 	for _, uri := range URIs {
 		fmt.Println(uri)
 	}
+
+	/*	URIs, err := fetchAllArtifactURIsV3(scheme, harborHost, auth)
+		if err != nil {
+			fmt.Printf("Error fetching artifact URIs: %v\n", err)
+			return
+		}
+
+		fmt.Println("Artifact URIs:")
+		for _, uri := range URIs {
+			fmt.Println(uri)
+		}*/
 
 	/*
 		NonUnknownUris, singles, multies, multiesWithchilds, multiesWithchildsAndUnknownArchs, err := fetchAllArtifactURIsV2(scheme, harborHost, auth)
