@@ -32,6 +32,9 @@ func downloadArtifacts(baseURL, auth string) error {
 
 // 用于下载并保存所有制品的函数
 func downloadAndSaveArtifacts(baseURL, auth string) error {
+	startTime := time.Now()
+	fmt.Printf("Start time: %s\n", startTime.Format("2006-01-02 15:04:05.000000000"))
+
 	uris, err := fetchNonUnknownArchURIs(baseURL, auth)
 	if err != nil {
 		return err
@@ -66,6 +69,10 @@ func downloadAndSaveArtifacts(baseURL, auth string) error {
 		}
 		fmt.Printf("Successfully saved artifact: %s\n", filePath)
 	}
+
+	endTime := time.Now()
+	fmt.Printf("End time: %s\n", endTime.Format("2006-01-02 15:04:05.000000000"))
+	fmt.Printf("Duration: %s\n", endTime.Sub(startTime))
 
 	return nil
 }
