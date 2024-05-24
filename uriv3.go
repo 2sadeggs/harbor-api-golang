@@ -21,18 +21,18 @@ func fetchAllArtifactURIsV3(scheme, harborHost, auth string) (NonUnknownArchURIs
 
 	projects, err := fetchAllProjects(baseURL, auth)
 	if err != nil {
-		return nil, nil, nil, nil, nil, err
+		return nil, err
 	}
 
 	for _, artifact := range artifacts {
 		projectName := getProjectNameByID(artifact.ProjectID, projects)
 		if projectName == "" {
-			return nil, nil, nil, nil, nil, fmt.Errorf("project name not found for project ID: %d", artifact.ProjectID)
+			return nil, fmt.Errorf("project name not found for project ID: %d", artifact.ProjectID)
 		}
 
 		repoName := getRepoNameByID(artifact.RepositoryID, repositories)
 		if repoName == "" {
-			return nil, nil, nil, nil, nil, fmt.Errorf("repository name not found for repository ID: %d", artifact.RepositoryID)
+			return nil, fmt.Errorf("repository name not found for repository ID: %d", artifact.RepositoryID)
 		}
 
 		var NonUnknownArchURI string

@@ -22,14 +22,14 @@ func main() {
 
 	//baseURL := fmt.Sprintf("%s://%s/api/v2.0", scheme, harborHost)
 
-	URIs, err := fetchAllArtifactURIsV3(harborHost, auth)
+	URIs, err := fetchAllArtifactURIsV3(scheme, harborHost, auth)
 	if err != nil {
 		fmt.Printf("Error fetching artifact URIs: %v\n", err)
 		return
 	}
 
 	fmt.Println("Artifact URIs:")
-	for _, uri := range artifactURIs {
+	for _, uri := range URIs {
 		fmt.Println(uri)
 	}
 
