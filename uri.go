@@ -5,134 +5,116 @@ import (
 	"net/url"
 )
 
-// Fetch all artifact URIs for all repositories
-func fetchAllArtifactURIs(baseURL, auth string) (
-	NonUnknownUris, singleArchUris, multiArchUris,
-	multiArchUrisWithChildDigest, multiArchUrisWithChildDigestAndUnknownArch []string, err error) {
-
-	// Parse baseURL to extract harborHost
+func fetchAllURIs(baseURL, auth string) (
+	singleArchURIs []string,
+	multiArchURIs []string,
+	multiArchWithChildURIs []string,
+	allURIs []string,
+	nonUnknownArchURIs []string,
+	unknownArchURIs []string,
+	err error,
+) {
+	// 解析 baseURL 以提取 harborHost
 	u, err := url.Parse(baseURL)
 	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("invalid baseURL: %v", err)
+		return nil, nil, nil, nil, nil, nil, fmt.Errorf("invalid baseURL: %v", err)
 	}
 	harborHost := fmt.Sprintf("%s", u.Host)
 
-	artifacts, err := fetchAllArtifacts(baseURL, auth)
-	if err != nil {
-		return nil, nil, nil, nil, nil, err
-	}
-
 	repositories, err := fetchAllRepositories(baseURL, auth)
 	if err != nil {
-		return nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, err
 	}
 
-	projects, err := fetchAllProjects(baseURL, auth)
+	artifacts, err := fetchAllArtifacts(baseURL, auth)
 	if err != nil {
-		return nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, err
 	}
 
+	// 遍历所有制品
 	for _, artifact := range artifacts {
-		projectName := getProjectNameByID(artifact.ProjectID, projects)
-		if projectName == "" {
-			return nil, nil, nil, nil, nil, fmt.Errorf("project name not found for project ID: %d", artifact.ProjectID)
-		}
-
+		// 根据制品的 RepositoryID 获取 RepositoryName
 		repoName := getRepoNameByID(artifact.RepositoryID, repositories)
 		if repoName == "" {
-			return nil, nil, nil, nil, nil, fmt.Errorf("repository name not found for repository ID: %d", artifact.RepositoryID)
+			return nil, nil, nil, nil, nil, nil, fmt.Errorf("repository name not found for repository ID: %d", artifact.RepositoryID)
 		}
 
-		var NonUnknown string
 		if len(artifact.References) == 0 {
-			// Single-architecture artifact
-			uri := fmt.Sprintf("%s/%s/%s@%s",
-				harborHost, projectName, repoName, artifact.Digest)
-			//uris = append(uris, uri)
-			NonUnknown = fmt.Sprintf("%s/%s/%s@%s",
-				harborHost, projectName, repoName, artifact.Digest)
-			singleArchUris = append(singleArchUris, uri)
-			NonUnknownUris = append(NonUnknownUris, NonUnknown)
+			// 单架构制品
+			uri := fmt.Sprintf("%s/%s@%s", harborHost, repoName, artifact.Digest)
+			singleArchURIs = append(singleArchURIs, uri)
+			allURIs = append(allURIs, uri)
+			nonUnknownArchURIs = append(nonUnknownArchURIs, uri)
 		} else {
-			// Multi-architecture artifact
-			uri := fmt.Sprintf("%s/%s/%s@%s",
-				harborHost, projectName, repoName, artifact.Digest)
-			//uris = append(uris, uri)
-			multiArchUris = append(multiArchUris, uri)
+			// 多架构制品
+			uri := fmt.Sprintf("%s/%s@%s", harborHost, repoName, artifact.Digest)
+			multiArchURIs = append(multiArchURIs, uri)
+
 			for _, reference := range artifact.References {
-				uriMultiWithChild := fmt.Sprintf("%s/%s/%s@%s::%s",
-					harborHost, projectName, repoName, artifact.Digest, reference.ChildDigest)
-				//uris = append(uris, uri)
-				multiArchUrisWithChildDigest = append(multiArchUrisWithChildDigest, uriMultiWithChild)
-				if reference.Platform.Architecture == "unknown" || reference.Platform.Os == "unknown" {
-					// 如果当前制品引用 reference 的平台架构或平台OS为 unknown 则跳出该 reference 循环 进入下一个 reference
-					uriMultiWithChildAndUnknownArch := fmt.Sprintf("%s/%s/%s@%s::%s",
-						harborHost, projectName, repoName, artifact.Digest, reference.ChildDigest)
-					multiArchUrisWithChildDigestAndUnknownArch = append(multiArchUrisWithChildDigestAndUnknownArch, uriMultiWithChildAndUnknownArch)
-					continue
+				childURI := fmt.Sprintf("%s/%s@%s::%s", harborHost, repoName, artifact.Digest, reference.ChildDigest)
+				multiArchWithChildURIs = append(multiArchWithChildURIs, childURI)
+
+				childDigestURI := fmt.Sprintf("%s/%s@%s", harborHost, repoName, reference.ChildDigest)
+
+				if reference.Platform.Architecture != "unknown" && reference.Platform.Os != "unknown" {
+					nonUnknownArchURIs = append(nonUnknownArchURIs, childDigestURI)
+				} else {
+					unknownArchURIs = append(unknownArchURIs, childDigestURI)
 				}
-				NonUnknown = fmt.Sprintf("%s/%s/%s@%s",
-					harborHost, projectName, repoName, reference.ChildDigest)
-				NonUnknownUris = append(NonUnknownUris, NonUnknown)
+
+				allURIs = append(allURIs, childDigestURI)
 			}
 		}
 	}
 
-	return NonUnknownUris, singleArchUris, multiArchUris, multiArchUrisWithChildDigest, multiArchUrisWithChildDigestAndUnknownArch, nil
+	// 返回各个类型的 URI 列表和错误信息
+	return singleArchURIs, multiArchURIs, multiArchWithChildURIs, allURIs, nonUnknownArchURIs, unknownArchURIs, nil
 }
 
-// Fetch all artifact URIs for all repositories none unknown arch
-func fetchAllArtifactURIsNonUnknownArch(baseURL, auth string) (NonUnknownArchURIs []string, err error) {
-	// Parse baseURL to extract harborHost
-	u, err := url.Parse(baseURL)
-	if err != nil {
-		return nil, fmt.Errorf("invalid baseURL: %v", err)
-	}
-	harborHost := fmt.Sprintf("%s", u.Host)
-
-	artifacts, err := fetchAllArtifacts(baseURL, auth)
+func fetchSingleArchURIs(baseURL, auth string) ([]string, error) {
+	singleArchURIs, _, _, _, _, _, err := fetchAllURIs(baseURL, auth)
 	if err != nil {
 		return nil, err
 	}
+	return singleArchURIs, nil
+}
 
-	repositories, err := fetchAllRepositories(baseURL, auth)
+func fetchMultiArchURIs(baseURL, auth string) ([]string, error) {
+	_, multiArchURIs, _, _, _, _, err := fetchAllURIs(baseURL, auth)
 	if err != nil {
 		return nil, err
 	}
+	return multiArchURIs, nil
+}
 
-	projects, err := fetchAllProjects(baseURL, auth)
+func fetchMultiArchWithChildURIs(baseURL, auth string) ([]string, error) {
+	_, _, multiArchWithChildURIs, _, _, _, err := fetchAllURIs(baseURL, auth)
 	if err != nil {
 		return nil, err
 	}
+	return multiArchWithChildURIs, nil
+}
 
-	for _, artifact := range artifacts {
-		projectName := getProjectNameByID(artifact.ProjectID, projects)
-		if projectName == "" {
-			return nil, fmt.Errorf("project name not found for project ID: %d", artifact.ProjectID)
-		}
-
-		repoName := getRepoNameByID(artifact.RepositoryID, repositories)
-		if repoName == "" {
-			return nil, fmt.Errorf("repository name not found for repository ID: %d", artifact.RepositoryID)
-		}
-
-		var NonUnknownArchURI string
-		if len(artifact.References) == 0 {
-			// Single-architecture artifact
-			NonUnknownArchURI = fmt.Sprintf("%s/%s/%s@%s", harborHost, projectName, repoName, artifact.Digest)
-			NonUnknownArchURIs = append(NonUnknownArchURIs, NonUnknownArchURI)
-		} else {
-			// Multi-architecture artifact
-			for _, reference := range artifact.References {
-				if reference.Platform.Architecture == "unknown" || reference.Platform.Os == "unknown" {
-					// 如果当前制品引用 reference 的平台架构或平台OS为 unknown 则跳出该 reference 循环 进入下一个 reference
-					continue
-				}
-				NonUnknownArchURI = fmt.Sprintf("%s/%s/%s@%s", harborHost, projectName, repoName, reference.ChildDigest)
-				NonUnknownArchURIs = append(NonUnknownArchURIs, NonUnknownArchURI)
-			}
-		}
+func fetchAllURIsList(baseURL, auth string) ([]string, error) {
+	_, _, _, allURIs, _, _, err := fetchAllURIs(baseURL, auth)
+	if err != nil {
+		return nil, err
 	}
+	return allURIs, nil
+}
 
-	return NonUnknownArchURIs, nil
+func fetchNonUnknownArchURIs(baseURL, auth string) ([]string, error) {
+	_, _, _, _, nonUnknownArchURIs, _, err := fetchAllURIs(baseURL, auth)
+	if err != nil {
+		return nil, err
+	}
+	return nonUnknownArchURIs, nil
+}
+
+func fetchUnknownArchURIs(baseURL, auth string) ([]string, error) {
+	_, _, _, _, _, unknownArchURIs, err := fetchAllURIs(baseURL, auth)
+	if err != nil {
+		return nil, err
+	}
+	return unknownArchURIs, nil
 }

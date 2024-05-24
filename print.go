@@ -43,3 +43,45 @@ func printArtifacts(artifacts []Artifact) {
 		fmt.Println()
 	}
 }
+
+// 打印所有制品的 URI 列表
+func printAllURIs(singleArchURIs, multiArchURIs, multiArchWithChildURIs, allURIs, nonUnknownArchURIs, unknownArchURIs []string) {
+	fmt.Println("Single-architecture URIs:")
+	for _, uri := range singleArchURIs {
+		fmt.Println(uri)
+	}
+
+	fmt.Println("\nMulti-architecture URIs:")
+	for _, uri := range multiArchURIs {
+		fmt.Println(uri)
+	}
+
+	fmt.Println("\nMulti-architecture with child URIs:")
+	for _, uri := range multiArchWithChildURIs {
+		fmt.Println(uri)
+	}
+
+	fmt.Println("\nAll URIs:")
+	for _, uri := range allURIs {
+		fmt.Println(uri)
+	}
+
+	fmt.Println("\nNon-unknown architecture and OS URIs:")
+	for _, uri := range nonUnknownArchURIs {
+		fmt.Println(uri)
+	}
+
+	fmt.Println("\nUnknown architecture or OS URIs:")
+	for _, uri := range unknownArchURIs {
+		fmt.Println(uri)
+	}
+}
+
+// 打印 URI 列表的函数
+func printURIs(label string, uris []string) {
+	fmt.Printf("%s:\n", label)
+	for _, uri := range uris {
+		fmt.Println(uri)
+	}
+	fmt.Println()
+}

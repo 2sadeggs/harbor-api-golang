@@ -21,7 +21,7 @@ func main() {
 	}
 
 	// 定义命令行选项
-	action := flag.String("action", "", "Action to perform: ping, health, statistics, projects, repositories, artifacts, non-unknown-artifacts")
+	action := flag.String("action", "", "Action to perform: ping, health, statistics, projects, repositories, artifacts, uris")
 	flag.Parse()
 
 	switch *action {
@@ -79,172 +79,23 @@ func main() {
 			return
 		}
 		printArtifacts(artifacts)
-	case "alltypeuris":
-		NonUnknownArchUris, singles, multies, multiesWithChilds, multiesWithChildsAndUnknownArchs, err :=
-			fetchAllArtifactURIs(baseURL, auth)
+	case "uris":
+		// 获取所有 URI 列表
+		singleArchURIs, multiArchURIs, multiArchWithChildURIs, allURIs, nonUnknownArchURIs, unknownArchURIs, err := fetchAllURIs(baseURL, auth)
 		if err != nil {
-			fmt.Printf("Error fetching artifact URIs: %v\n", err)
+			fmt.Printf("Error fetching URIs: %v\n", err)
 			return
 		}
 
-		fmt.Println("NonUnknownArch URIs:")
-		for _, NonUnknownArchUri := range NonUnknownArchUris {
-			fmt.Println(NonUnknownArchUri)
-		}
-
-		fmt.Println("Single URIs:")
-		for _, single := range singles {
-			fmt.Println(single)
-		}
-
-		fmt.Println("Muities URIs:")
-		for _, multi := range multies {
-			fmt.Println(multi)
-		}
-		fmt.Println("MultiesWithChilds URIs:")
-		for _, multiesWithChild := range multiesWithChilds {
-			fmt.Println(multiesWithChild)
-		}
-		fmt.Println("MultiesWithChildsAndUnknownArch URIs:")
-		for _, multiesWithChildsAndUnknownArch := range multiesWithChildsAndUnknownArchs {
-			fmt.Println(multiesWithChildsAndUnknownArch)
-		}
-	case "formaturis":
-		URIs, err := fetchAllArtifactURIsNonUnknownArch(baseURL, auth)
+		// 打印所有 URI 列表
+		printAllURIs(singleArchURIs, multiArchURIs, multiArchWithChildURIs, allURIs, nonUnknownArchURIs, unknownArchURIs)
+	case "download":
+		err := downloadAndSaveArtifacts(baseURL, auth)
 		if err != nil {
-			fmt.Printf("Error fetching artifact URIs: %v\n", err)
+			fmt.Printf("Error downloading and saving artifacts: %v\n", err)
 			return
-		}
-
-		fmt.Println("Artifact URIs:")
-		for _, uri := range URIs {
-			fmt.Println(uri)
 		}
 	default:
-		fmt.Println("Invalid action. Please choose one of: ping, health, statistics, projects, repositories, artifacts, non-unknown-artifacts")
+		fmt.Println("Invalid action. Please choose one of: ping, health, statistics, projects, repositories, artifacts, uris")
 	}
-
-	/*	URIs, err := fetchAllArtifactURIsNonUnknownArch(baseURL, auth)
-		if err != nil {
-			fmt.Printf("Error fetching artifact URIs: %v\n", err)
-			return
-		}
-
-		fmt.Println("Artifact URIs:")
-		for _, uri := range URIs {
-			fmt.Println(uri)
-		}*/
-
-	/*	URIs, err := fetchAllArtifactURIsV3(scheme, harborHost, auth)
-		if err != nil {
-			fmt.Printf("Error fetching artifact URIs: %v\n", err)
-			return
-		}
-
-		fmt.Println("Artifact URIs:")
-		for _, uri := range URIs {
-			fmt.Println(uri)
-		}*/
-
-	/*
-		NonUnknownUris, singles, multies, multiesWithchilds, multiesWithchildsAndUnknownArchs, err := fetchAllArtifactURIsV2(scheme, harborHost, auth)
-		if err != nil {
-			fmt.Printf("Error fetching artifact URIs: %v\n", err)
-			return
-		}
-
-		fmt.Println("NonUnknown URIs:")
-		for _, NonUnknownUri := range NonUnknownUris {
-			fmt.Println(NonUnknownUri)
-		}
-
-		fmt.Println("Single URIs:")
-		for _, single := range singles {
-			fmt.Println(single)
-		}
-
-		fmt.Println("Muities URIs:")
-		for _, multi := range multies {
-			fmt.Println(multi)
-		}
-		fmt.Println("MultiesWithchilds URIs:")
-		for _, multiesWithchild := range multiesWithchilds {
-			fmt.Println(multiesWithchild)
-		}
-		fmt.Println("MultiesWithchildsAndUnknownArch URIs:")
-		for _, multiesWithchildsAndUnknownArch := range multiesWithchildsAndUnknownArchs {
-			fmt.Println(multiesWithchildsAndUnknownArch)
-		}
-	*/
-	/*
-		artifactURIs, err := fetchAllArtifactURIs(baseURL, auth)
-		if err != nil {
-			fmt.Printf("Error fetching artifact URIs: %v\n", err)
-			return
-		}
-
-		fmt.Println("Artifact URIs:")
-		for _, uri := range artifactURIs {
-			fmt.Println(uri)
-		}
-	*/
-	/*artifactDigests, err := fetchAllArtifactsWithChildDigests(baseURL, auth)
-	if err != nil {
-		fmt.Printf("Error fetching artifact digests: %v\n", err)
-		return
-	}
-
-	fmt.Println("Single-architecture artifact digests:")
-	for _, digest := range artifactDigests["single_architecture"].([]string) {
-		fmt.Printf("Digest: %s\n", digest)
-	}
-
-	fmt.Println("Multi-architecture artifact digests:")
-	for _, multiArch := range artifactDigests["multi_architecture"].([]map[string]interface{}) {
-		fmt.Printf("Digest: %s\n", multiArch["digest"])
-		fmt.Println("Child Digests:")
-		for _, childDigest := range multiArch["childDigests"].([]string) {
-			fmt.Printf("  - %s\n", childDigest)
-		}
-	}*/
-
-	/*artifactDigests, err := fetchAllArtifactsWithTypes(baseURL, auth)
-	if err != nil {
-		fmt.Printf("Error fetching artifact digests: %v\n", err)
-		return
-	}
-
-	fmt.Println("Single-architecture artifact digests:")
-	for _, digest := range artifactDigests["single_architecture"] {
-		fmt.Printf("Digest: %s\n", digest)
-	}
-
-	fmt.Println("Multi-architecture artifact digests:")
-	for _, digest := range artifactDigests["multi_architecture"] {
-		fmt.Printf("Digest: %s\n", digest)
-	}*/
-
-	/*	// Fetch all projects
-		projects, err := fetchAllProjects(baseURL, auth)
-		if err != nil {
-			fmt.Printf("Error fetching projects: %v\n", err)
-			return
-		}
-		printProjects(projects)*/
-
-	/*	// Fetch all repositories
-		repositories, err := fetchAllRepositories(baseURL, auth)
-		if err != nil {
-			fmt.Printf("Error fetching repositories: %v\n", err)
-			return
-		}
-		printRepositories(repositories)*/
-
-	/*	// Fetch all artifacts
-		artifacts, err := fetchAllArtifacts(baseURL, auth)
-		if err != nil {
-			fmt.Printf("Error fetching artifacts: %v\n", err)
-			return
-		}
-		printArtifacts(artifacts)*/
 }
