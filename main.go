@@ -21,7 +21,8 @@ func main() {
 	}
 
 	// 定义命令行选项
-	action := flag.String("action", "", "Action to perform: ping, health, statistics, projects, repositories, artifacts, uris")
+	action := flag.String("action", "", "Action to perform:"+
+		"ping , health , statistics , projects , repositories , artifacts , uris , download , save")
 	flag.Parse()
 
 	switch *action {
@@ -86,16 +87,22 @@ func main() {
 			fmt.Printf("Error fetching URIs: %v\n", err)
 			return
 		}
-
 		// 打印所有 URI 列表
 		printAllURIs(singleArchURIs, multiArchURIs, multiArchWithChildURIs, allURIs, nonUnknownArchURIs, unknownArchURIs)
 	case "download":
-		err := downloadAndSaveArtifacts(baseURL, auth)
+		err := downloadArtifacts(baseURL, auth)
 		if err != nil {
 			fmt.Printf("Error downloading and saving artifacts: %v\n", err)
 			return
 		}
+	case "save":
+		err := downloadAndSaveArtifacts(baseURL, auth)
+		if err != nil {
+			fmt.Printf("Error downloading and saving artifacts: %v\n", err)
+		}
 	default:
-		fmt.Println("Invalid action. Please choose one of: ping, health, statistics, projects, repositories, artifacts, uris")
+		fmt.Println("Invalid action. Please choose one of: " +
+			"ping , health , statistics , projects , repositories , artifacts , uris , " +
+			"download , save")
 	}
 }
