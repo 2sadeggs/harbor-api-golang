@@ -33,7 +33,7 @@ func downloadAndSaveAllArtifacts(baseURL, auth string) error {
 	}
 
 	// 创建一个清单文件
-	listFilePath := filepath.Join(savePath, "download_list.txt")
+	listFilePath := filepath.Join(savePath, "all_uri_list.txt")
 	err = saveURIsToFile(listFilePath, uris)
 	if err != nil {
 		return fmt.Errorf("failed to save URI list: %v", err)

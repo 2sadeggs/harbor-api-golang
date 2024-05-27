@@ -61,25 +61,31 @@ func main() {
 		// 输出统计信息
 		PrintHarborStatistics(stats)
 	case "projects":
+		// 获取 Harbor 所有项目列表
 		projects, err := fetchAllProjects(baseURL, auth)
 		if err != nil {
 			fmt.Printf("Error fetching projects: %v\n", err)
 			return
 		}
+		// 打印所有项目列表
 		printProjects(projects)
 	case "repositories":
+		// 获取 Harbor 所有仓库列表
 		repositories, err := fetchAllRepositories(baseURL, auth)
 		if err != nil {
 			fmt.Printf("Error fetching repositories: %v\n", err)
 			return
 		}
+		// 打印所有仓库列表
 		printRepositories(repositories)
 	case "artifacts":
+		// 获取 Harbor 所有制品列表
 		artifacts, err := fetchAllArtifacts(baseURL, auth)
 		if err != nil {
 			fmt.Printf("Error fetching artifacts: %v\n", err)
 			return
 		}
+		// 打印所有制品列表
 		printArtifacts(artifacts)
 	//case "uris":
 	//	// 获取所有 URI 列表
@@ -91,24 +97,29 @@ func main() {
 	//	// 打印所有 URI 列表
 	//	printAllURIs(singleArchURIs, multiArchURIs, multiArchWithChildURIs, allURIs, nonUnknownArchURIs, unknownArchURIs)
 	case "uris":
+		// 获取所有 URI 列表
 		artifactMap, err := fetchAllArtifactsWithTypes(baseURL, auth)
 		if err != nil {
 			fmt.Printf("Error fetching URIs: %v\n", err)
 			return
 		}
+		// 打印所有 URI 列表
 		printArtifactsWithTypes(artifactMap)
 	case "pull":
+		// docker pull 所有 URI
 		err := downloadArtifacts(baseURL, auth)
 		if err != nil {
 			fmt.Printf("Error downloading and saving artifacts: %v\n", err)
 			return
 		}
 	case "save":
+		// docker pull and docker save 所有 URI
 		err := downloadAndSaveArtifacts(baseURL, auth)
 		if err != nil {
 			fmt.Printf("Error downloading and saving artifacts: %v\n", err)
 		}
 	case "full_backup":
+		// 全量备份
 		err := downloadAndSaveAllArtifacts(baseURL, auth)
 		if err != nil {
 			fmt.Printf("Error in full backup: %v\n", err)
@@ -116,6 +127,7 @@ func main() {
 		}
 		fmt.Println("Full backup completed successfully.")
 	case "delta_backup":
+		// 差量备份
 		err := downloadAndSaveDeltaArtifacts(baseURL, auth)
 		if err != nil {
 			fmt.Printf("Error in delta backup: %v\n", err)

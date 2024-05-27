@@ -1,3 +1,3 @@
-module harbor_api_nicaicai
+module harbor_api_mario
 
 go 1.22
