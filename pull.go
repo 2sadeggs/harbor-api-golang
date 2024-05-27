@@ -52,7 +52,7 @@ func downloadAndSaveArtifacts(baseURL, auth string) error {
 	}
 
 	// 获取 non_unknown_arch_uris 类型的 URI 列表
-	uris, ok := artifactURIs["non_unknown_arch_uris"]
+	nonUnknownArchURIs, ok := artifactURIs["non_unknown_arch_uris"]
 	if !ok {
 		fmt.Println("No non_unknown_arch_uris found.")
 		return err
@@ -81,7 +81,7 @@ func downloadAndSaveArtifacts(baseURL, auth string) error {
 	semaphore := make(chan struct{}, concurrencyLimit)
 	var wg sync.WaitGroup
 
-	for _, uri := range uris {
+	for _, uri := range nonUnknownArchURIs {
 		wg.Add(1)
 		go func(uri string) {
 			defer wg.Done()

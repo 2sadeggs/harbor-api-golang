@@ -217,6 +217,8 @@ func findNewOrChangedURIs(currentURIs, previousURIs []string) []string {
 	var newOrChangedURIs []string
 	for _, uri := range currentURIs {
 		if _, found := previousURISet[uri]; !found {
+			// 如果这里的 uri 是切片 previousURIs 的 那么 previousURISet[uri] 肯定一直被找到
+			// 偏偏这里用的是 切片 currentURIs 的 uri 那么 能找到的都不要 找不到的留下
 			newOrChangedURIs = append(newOrChangedURIs, uri)
 		}
 	}

@@ -1,6 +1,5 @@
 package main
 
-/*
 import (
 	"fmt"
 	"net/url"
@@ -119,4 +118,3 @@ func fetchUnknownArchURIs(baseURL, auth string) ([]string, error) {
 	}
 	return unknownArchURIs, nil
 }
-*/

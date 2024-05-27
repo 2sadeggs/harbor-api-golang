@@ -5,32 +5,8 @@ import (
 	"fmt"
 )
 
-// Check API availability
-func checkAPI(baseURL, auth string) error {
-	url := fmt.Sprintf("%s/ping", baseURL)
-	_, err := getRequest(url, auth)
-	return err
-}
-
-// Fetch statistics
-func fetchStatistics(baseURL, auth string) (*HarborStatistics, error) {
-	url := fmt.Sprintf("%s/statistics", baseURL)
-	body, err := getRequest(url, auth)
-	if err != nil {
-		return nil, err
-	}
-
-	var stats HarborStatistics
-	err = json.Unmarshal(body, &stats)
-	if err != nil {
-		return nil, err
-	}
-
-	return &stats, nil
-}
-
 // Fetch all projects
-func fetchHarborAllProjects(baseURL, auth string) ([]Project, error) {
+func fetchHarborProjects(baseURL, auth string) ([]Project, error) {
 	var projects []Project
 	page := 1
 
