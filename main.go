@@ -109,7 +109,7 @@ func main() {
 		// docker pull 所有 URI
 		err := downloadArtifacts(baseURL, auth)
 		if err != nil {
-			fmt.Printf("Error downloading and saving artifacts: %v\n", err)
+			fmt.Printf("Error downloading artifacts: %v\n", err)
 			return
 		}
 	case "save":

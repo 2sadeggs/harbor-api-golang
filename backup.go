@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// 保存上次备份路径的文件
+// 保存上次全量备份路径的文件
 const lastBackupPathFile = "./last_full_backup_path.txt"
 
 // downloadAndSaveAllArtifacts 全量备份
@@ -19,8 +19,17 @@ func downloadAndSaveAllArtifacts(baseURL, auth string) error {
 	startTime := time.Now()
 	fmt.Printf("Start time: %s\n", startTime.Format("2006-01-02 15:04:05.000000000"))
 
-	uris, err := fetchNonUnknownArchURIs(baseURL, auth)
+	// 调用 fetchAllArtifactsWithTypes 获取 URI 列表
+	artifactURIs, err := fetchAllArtifactsWithTypes(baseURL, auth)
 	if err != nil {
+		fmt.Printf("Error fetching artifacts: %v\n", err)
+		return err
+	}
+
+	// 获取 non_unknown_arch_uris 类型的 URI 列表
+	nonUnknownArchURIs, ok := artifactURIs["non_unknown_arch_uris"]
+	if !ok {
+		fmt.Println("No non_unknown_arch_uris found.")
 		return err
 	}
 
@@ -34,7 +43,7 @@ func downloadAndSaveAllArtifacts(baseURL, auth string) error {
 
 	// 创建一个清单文件
 	listFilePath := filepath.Join(savePath, "all_uri_list.txt")
-	err = saveURIsToFile(listFilePath, uris)
+	err = saveURIsToFile(listFilePath, nonUnknownArchURIs)
 	if err != nil {
 		return fmt.Errorf("failed to save URI list: %v", err)
 	}
@@ -50,7 +59,7 @@ func downloadAndSaveAllArtifacts(baseURL, auth string) error {
 	semaphore := make(chan struct{}, concurrencyLimit)
 	var wg sync.WaitGroup
 
-	for _, uri := range uris {
+	for _, uri := range nonUnknownArchURIs {
 		wg.Add(1)
 		go func(uri string) {
 			defer wg.Done()
@@ -96,9 +105,17 @@ func downloadAndSaveDeltaArtifacts(baseURL, auth string) error {
 	startTime := time.Now()
 	fmt.Printf("Start time: %s\n", startTime.Format("2006-01-02 15:04:05.000000000"))
 
-	// 获取当前的 URI 列表
-	uris, err := fetchNonUnknownArchURIs(baseURL, auth)
+	// 调用 fetchAllArtifactsWithTypes 获取 URI 列表
+	artifactURIs, err := fetchAllArtifactsWithTypes(baseURL, auth)
 	if err != nil {
+		fmt.Printf("Error fetching artifacts: %v\n", err)
+		return err
+	}
+
+	// 获取 non_unknown_arch_uris 类型的 URI 列表
+	nonUnknownArchURIs, ok := artifactURIs["non_unknown_arch_uris"]
+	if !ok {
+		fmt.Println("No non_unknown_arch_uris found.")
 		return err
 	}
 
@@ -116,7 +133,7 @@ func downloadAndSaveDeltaArtifacts(baseURL, auth string) error {
 	}
 
 	// 找出新的或变更的 URI
-	newOrChangedURIs := findNewOrChangedURIs(uris, previousURIs)
+	newOrChangedURIs := findNewOrChangedURIs(nonUnknownArchURIs, previousURIs)
 	if len(newOrChangedURIs) == 0 {
 		fmt.Println("No new or changed artifacts to download.")
 		return nil
@@ -139,7 +156,7 @@ func downloadAndSaveDeltaArtifacts(baseURL, auth string) error {
 
 	// 创建一个清单文件
 	listFilePath := filepath.Join(savePath, "all_uri_list.txt")
-	err = saveURIsToFile(listFilePath, uris)
+	err = saveURIsToFile(listFilePath, nonUnknownArchURIs)
 	if err != nil {
 		return fmt.Errorf("failed to save URI list: %v", err)
 	}
