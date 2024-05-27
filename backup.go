@@ -109,7 +109,7 @@ func downloadAndSaveDeltaArtifacts(baseURL, auth string) error {
 	}
 
 	// 从上次全量备份的清单文件中读取上次备份的 URI 列表
-	previousListFile := filepath.Join(lastBackupPath, "download_list.txt")
+	previousListFile := filepath.Join(lastBackupPath, "all_uri_list.txt")
 	previousURIs, err := readURIsFromFile(previousListFile)
 	if err != nil {
 		return err
@@ -138,7 +138,7 @@ func downloadAndSaveDeltaArtifacts(baseURL, auth string) error {
 	}
 
 	// 创建一个清单文件
-	listFilePath := filepath.Join(savePath, "download_list.txt")
+	listFilePath := filepath.Join(savePath, "all_uri_list.txt")
 	err = saveURIsToFile(listFilePath, uris)
 	if err != nil {
 		return fmt.Errorf("failed to save URI list: %v", err)

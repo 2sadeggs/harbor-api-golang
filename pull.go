@@ -29,7 +29,7 @@ func downloadAndSaveArtifacts(baseURL, auth string) error {
 	}
 
 	// 创建一个清单文件
-	listFilePath := filepath.Join(savePath, "download_list.txt")
+	listFilePath := filepath.Join(savePath, "all_uri_list.txt")
 	listFile, err := os.Create(listFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to create list file: %v", err)
