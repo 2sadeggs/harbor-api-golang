@@ -85,3 +85,14 @@ func printURIs(label string, uris []string) {
 	}
 	fmt.Println()
 }
+
+// 打印 URI
+func printArtifactsWithTypes(artifactMap map[string][]string) {
+	fmt.Println("Artifacts with types:")
+	for key, uris := range artifactMap {
+		fmt.Printf("%s:\n", key)
+		for _, uri := range uris {
+			fmt.Printf("- %s\n", uri)
+		}
+	}
+}

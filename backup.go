@@ -11,58 +11,8 @@ import (
 	"time"
 )
 
-// findNewOrChangedURIs 查找新增或更改的制品 URI
-func findNewOrChangedURIs(currentURIs, previousURIs []string) []string {
-	previousURISet := make(map[string]struct{}, len(previousURIs))
-	for _, uri := range previousURIs {
-		previousURISet[uri] = struct{}{}
-	}
-
-	var newOrChangedURIs []string
-	for _, uri := range currentURIs {
-		if _, found := previousURISet[uri]; !found {
-			newOrChangedURIs = append(newOrChangedURIs, uri)
-		}
-	}
-
-	return newOrChangedURIs
-}
-
-// readURIsFromFile 从文件读取 URI 列表
-func readURIsFromFile(filePath string) ([]string, error) {
-	data, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return nil, err
-	}
-	uris := strings.Split(string(data), "\n")
-	if len(uris) > 0 && uris[len(uris)-1] == "" {
-		uris = uris[:len(uris)-1]
-	}
-	return uris, nil
-}
-
-// saveURIsToFile 将 URI 列表保存到文件
-func saveURIsToFile(filePath string, uris []string) error {
-	data := strings.Join(uris, "\n")
-	return ioutil.WriteFile(filePath, []byte(data), 0644)
-}
-
 // 保存上次备份路径的文件
 const lastBackupPathFile = "./last_full_backup_path.txt"
-
-// saveLastBackupPath 保存上次备份路径到固定文件
-func saveLastBackupPath(path string) error {
-	return ioutil.WriteFile(lastBackupPathFile, []byte(path), 0644)
-}
-
-// getLastBackupPath 获取上次备份路径
-func getLastBackupPath() (string, error) {
-	data, err := ioutil.ReadFile(lastBackupPathFile)
-	if err != nil {
-		return "", err
-	}
-	return string(data), nil
-}
 
 // downloadAndSaveAllArtifacts 全量备份
 func downloadAndSaveAllArtifacts(baseURL, auth string) error {
@@ -141,40 +91,50 @@ func downloadAndSaveAllArtifacts(baseURL, auth string) error {
 	return nil
 }
 
-// downloadAndSaveDeltaArtifacts 差量备份
+// downloadAndSaveDeltaArtifactsWithDiffList 差量备份，并保存差异清单
 func downloadAndSaveDeltaArtifacts(baseURL, auth string) error {
 	startTime := time.Now()
 	fmt.Printf("Start time: %s\n", startTime.Format("2006-01-02 15:04:05.000000000"))
 
+	// 获取当前的 URI 列表
 	uris, err := fetchNonUnknownArchURIs(baseURL, auth)
 	if err != nil {
 		return err
 	}
 
+	// 获取上次全量备份的路径
 	lastBackupPath, err := getLastBackupPath()
 	if err != nil {
 		return err
 	}
 
+	// 从上次全量备份的清单文件中读取上次备份的 URI 列表
 	previousListFile := filepath.Join(lastBackupPath, "download_list.txt")
 	previousURIs, err := readURIsFromFile(previousListFile)
 	if err != nil {
 		return err
 	}
 
+	// 找出新的或变更的 URI
 	newOrChangedURIs := findNewOrChangedURIs(uris, previousURIs)
-
 	if len(newOrChangedURIs) == 0 {
 		fmt.Println("No new or changed artifacts to download.")
 		return nil
 	}
 
-	// 创建一个以时间戳命名的保存目录，包含 "delta" 标识
+	// 创建以时间戳命名的保存目录，包含 "delta" 标识
 	timestamp := time.Now().Format("2006-01-02_15-04-05.000000000")
 	savePath := filepath.Join(".", "artifacts", "delta_"+timestamp)
 	err = os.MkdirAll(savePath, 0755)
 	if err != nil {
 		return fmt.Errorf("failed to create save directory: %v", err)
+	}
+
+	// 创建差异清单文件
+	diffListFilePath := filepath.Join(savePath, "diff_list.txt")
+	err = saveURIsToFile(diffListFilePath, newOrChangedURIs)
+	if err != nil {
+		return fmt.Errorf("failed to save diff URI list: %v", err)
 	}
 
 	// 创建一个清单文件
@@ -228,4 +188,54 @@ func downloadAndSaveDeltaArtifacts(baseURL, auth string) error {
 	fmt.Printf("Duration: %s\n", endTime.Sub(startTime))
 
 	return nil
+}
+
+// findNewOrChangedURIs 查找新增或更改的制品 URI
+func findNewOrChangedURIs(currentURIs, previousURIs []string) []string {
+	previousURISet := make(map[string]struct{}, len(previousURIs))
+	for _, uri := range previousURIs {
+		previousURISet[uri] = struct{}{}
+	}
+
+	var newOrChangedURIs []string
+	for _, uri := range currentURIs {
+		if _, found := previousURISet[uri]; !found {
+			newOrChangedURIs = append(newOrChangedURIs, uri)
+		}
+	}
+
+	return newOrChangedURIs
+}
+
+// readURIsFromFile 从文件读取 URI 列表
+func readURIsFromFile(filePath string) ([]string, error) {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+	uris := strings.Split(string(data), "\n")
+	if len(uris) > 0 && uris[len(uris)-1] == "" {
+		uris = uris[:len(uris)-1]
+	}
+	return uris, nil
+}
+
+// saveURIsToFile 将 URI 列表保存到文件
+func saveURIsToFile(filePath string, uris []string) error {
+	data := strings.Join(uris, "\n")
+	return ioutil.WriteFile(filePath, []byte(data), 0644)
+}
+
+// saveLastBackupPath 保存上次备份路径到固定文件
+func saveLastBackupPath(path string) error {
+	return ioutil.WriteFile(lastBackupPathFile, []byte(path), 0644)
+}
+
+// getLastBackupPath 获取上次备份路径
+func getLastBackupPath() (string, error) {
+	data, err := ioutil.ReadFile(lastBackupPathFile)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }

@@ -1,5 +1,7 @@
 package main
 
+// Data structures (omitted for brevity, use the ones from the initial example)
+
 type HealthStatus struct {
 	Status     string       `json:"status"`
 	Components []HealthComp `json:"components"`

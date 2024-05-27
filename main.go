@@ -21,7 +21,7 @@ func main() {
 	}
 
 	// 定义命令行选项
-	action := flag.String("action", "", "Action to perform:"+
+	action := flag.String("action", "", "Action to perform: "+
 		"ping , health , statistics , projects , repositories , artifacts , uris , "+
 		"pull , save, full_backup , delta_backup")
 	flag.Parse()
@@ -81,15 +81,22 @@ func main() {
 			return
 		}
 		printArtifacts(artifacts)
+	//case "uris":
+	//	// 获取所有 URI 列表
+	//	singleArchURIs, multiArchURIs, multiArchWithChildURIs, allURIs, nonUnknownArchURIs, unknownArchURIs, err := fetchAllURIs(baseURL, auth)
+	//	if err != nil {
+	//		fmt.Printf("Error fetching URIs: %v\n", err)
+	//		return
+	//	}
+	//	// 打印所有 URI 列表
+	//	printAllURIs(singleArchURIs, multiArchURIs, multiArchWithChildURIs, allURIs, nonUnknownArchURIs, unknownArchURIs)
 	case "uris":
-		// 获取所有 URI 列表
-		singleArchURIs, multiArchURIs, multiArchWithChildURIs, allURIs, nonUnknownArchURIs, unknownArchURIs, err := fetchAllURIs(baseURL, auth)
+		artifactMap, err := fetchAllArtifactsWithTypes(baseURL, auth)
 		if err != nil {
 			fmt.Printf("Error fetching URIs: %v\n", err)
 			return
 		}
-		// 打印所有 URI 列表
-		printAllURIs(singleArchURIs, multiArchURIs, multiArchWithChildURIs, allURIs, nonUnknownArchURIs, unknownArchURIs)
+		printArtifactsWithTypes(artifactMap)
 	case "pull":
 		err := downloadArtifacts(baseURL, auth)
 		if err != nil {
