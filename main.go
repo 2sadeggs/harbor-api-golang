@@ -22,7 +22,8 @@ func main() {
 
 	// 定义命令行选项
 	action := flag.String("action", "", "Action to perform:"+
-		"ping , health , statistics , projects , repositories , artifacts , uris , download , save")
+		"ping , health , statistics , projects , repositories , artifacts , uris , "+
+		"pull , save, full_backup , delta_backup")
 	flag.Parse()
 
 	switch *action {
@@ -89,7 +90,7 @@ func main() {
 		}
 		// 打印所有 URI 列表
 		printAllURIs(singleArchURIs, multiArchURIs, multiArchWithChildURIs, allURIs, nonUnknownArchURIs, unknownArchURIs)
-	case "download":
+	case "pull":
 		err := downloadArtifacts(baseURL, auth)
 		if err != nil {
 			fmt.Printf("Error downloading and saving artifacts: %v\n", err)
@@ -100,9 +101,23 @@ func main() {
 		if err != nil {
 			fmt.Printf("Error downloading and saving artifacts: %v\n", err)
 		}
+	case "full_backup":
+		err := downloadAndSaveAllArtifacts(baseURL, auth)
+		if err != nil {
+			fmt.Printf("Error in full backup: %v\n", err)
+			return
+		}
+		fmt.Println("Full backup completed successfully.")
+	case "delta_backup":
+		err := downloadAndSaveDeltaArtifacts(baseURL, auth)
+		if err != nil {
+			fmt.Printf("Error in delta backup: %v\n", err)
+			return
+		}
+		fmt.Println("Delta backup completed successfully.")
 	default:
 		fmt.Println("Invalid action. Please choose one of: " +
 			"ping , health , statistics , projects , repositories , artifacts , uris , " +
-			"download , save")
+			"pull , save  , full_backup , delta_backup")
 	}
 }

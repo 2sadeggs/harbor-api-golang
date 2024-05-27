@@ -28,6 +28,16 @@ func downloadAndSaveArtifacts(baseURL, auth string) error {
 		return fmt.Errorf("failed to create save directory: %v", err)
 	}
 
+	// 创建一个清单文件
+	listFilePath := filepath.Join(savePath, "download_list.txt")
+	listFile, err := os.Create(listFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to create list file: %v", err)
+	}
+	defer listFile.Close()
+
+	var listFileMutex sync.Mutex
+
 	// 使用带缓冲的 channel 来限制并发 goroutine 数量
 	concurrencyLimit := 5 // 并发数量限制
 	semaphore := make(chan struct{}, concurrencyLimit)
@@ -62,6 +72,15 @@ func downloadAndSaveArtifacts(baseURL, auth string) error {
 				return
 			}
 			fmt.Printf("Successfully saved artifact: %s\n", filePath)
+
+			// 将 URI 写入清单文件
+			listFileMutex.Lock()
+			_, err = listFile.WriteString(uri + "\n")
+			listFileMutex.Unlock()
+			if err != nil {
+				fmt.Printf("Failed to write URI to list file: %v\n", err)
+				return
+			}
 		}(uri)
 	}
 
